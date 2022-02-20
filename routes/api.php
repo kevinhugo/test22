@@ -22,7 +22,7 @@ Route::prefix('item')->group(function () {
     Route::post('save', 'App\Http\Controllers\ItemController@saveItem')->name('item.save');
     Route::get('detail', 'App\Http\Controllers\ItemController@getItemDetail')->name('item.detail');
     Route::prefix('get')->group(function () {
-        Route::get('item-list', 'App\Http\Controllers\ItemController@getItemList')->name('item.get.item-list');
+        Route::get('item-list', 'App\Http\Controllers\ItemController@getItemListApi')->name('item.get.item-list-api');
     });
     Route::prefix('update')->group(function () {
         Route::post('item', 'App\Http\Controllers\ItemController@updateItem')->name('item.update.item');

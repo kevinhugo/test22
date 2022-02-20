@@ -128,16 +128,22 @@
                 <table id="itemList" class="table table-bordered table-hover">
                   <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Action</th>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
+                  </tbody>
+                  <tfoot>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
                   </tfoot>
                 </table>
-                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#itemModal" style="float:right;">
+                <button type="button" class="btn btn-success" id="addItem" style="float:right;">
                   Add Item
                 </button>
                 <div class="modal fade" id="itemModal">
@@ -229,6 +235,29 @@
         </div>
         <!-- /.row -->
       </div>
+      <div class="modal fade" id="deleteItemModal">
+        <input type="number" name="delete-item-id" hidden>
+        <div class="modal-dialog modal-sm">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Delete Confirmation Modal</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure to delete this item ?</p>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="confirmDeleteButton">Yes</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
       <!-- /.container-fluid -->
     </section>
     <!-- /.content -->
@@ -304,13 +333,13 @@
 <script>
 $(document).ready(function() {
     let itemListTable = $("#itemList").DataTable({
-        searching: false,
+        searching: true,
         autoWidth: false,
         processing: true,
         serverSide: true,
         pageLength: 10,
         ajax: {
-            url: "{{ route('item.get.item-list', ['', '', '', '', '']) }}",
+            url: "{{ route('item.get.item-list') }}",
             type: 'GET',
         },
         order: [],
@@ -318,19 +347,22 @@ $(document).ready(function() {
             {
                 data: 'name',
                 name: 'name',
-                orderable: false,
+                orderable: true,
+                searchable: true,
                 defaultContent: "-"
             },
             {
                 data: 'category',
                 name: 'category',
-                orderable: false,
+                orderable: true,
+                searchable: true,
                 defaultContent: "-"
             },
             {
                 data: 'description',
-                name: 'descritpion',
-                orderable: false,
+                name: 'description',
+                orderable: true,
+                searchable: true,
                 defaultContent: "-"
             },
             {
@@ -351,8 +383,26 @@ $(document).ready(function() {
                 }
             },
         ],
-        responsive: false,
+        responsive: false
     });
+    $("#itemList tfoot th:not(:last)").each( function () {
+        var title = $(this).text();
+        $(this).html( '<input type="text" class="form-control search" name="' + title + '" />' );
+    } );
+    $("#itemList thead").append($("#itemList tfoot th"));
+
+    $("#itemList_filter").css("visibility","hidden");
+
+    itemListTable.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change clear', function () {
+            if ( that.search() !== this.value ) {
+                that
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
 
     let imageLinkList = $("div[name='image-link-list']");
     let colorList = $("div[name='color-list']");
@@ -466,6 +516,7 @@ $(document).ready(function() {
   });
 
   var itemModal = $("#itemModal");
+  var deleteItemModal = $("#deleteItemModal");
   
   itemForm.on("submit", function (event)
   {
@@ -509,6 +560,7 @@ $(document).ready(function() {
             sizeList.html("");
 
             itemModal.modal("show");
+            itemForm.find("input[name='id']").val(result["id"]);
             itemForm.find("input[name='name']").val(result["name"]);
             itemForm.find("select[name='category']").val(result["category_id"]);
             itemForm.find("textarea[name='description']").val(result["description"]);
@@ -550,30 +602,39 @@ $(document).ready(function() {
   $("#saveButton").on("click",function() {
     itemForm.submit();
   });
+
+  $("#addItem").on("click",function() {
+    clearModal();
+    itemModal.modal("show");
+  });
   
   $(document).on("click","button[name='delete-item']",function() {
-      $.ajax({
-          url: "{{ route('item.delete.item') }}",
-          type: "POST",
-          data: { "id" : $(this).attr("item-id") },
-          dataType: 'JSON',
-          success: function (result) {
-            Toast.fire({
-              icon: 'success',
-              title: result["message"]
-            });
-            itemModal.modal("hide");
-            itemListTable.ajax.reload();
-            clearModal();
-          },
-          error: function(result) {
-            result = result["responseJSON"];
-            Toast.fire({
-              icon: 'error',
-              title: result["message"]
-            });
-          }
-      });
+    deleteItemModal.find("input[name='delete-item-id']").val($(this).attr("item-id"));
+    deleteItemModal.modal("show");
+  });
+  
+  deleteItemModal.find("button#confirmDeleteButton").on("click",function() {
+    $.ajax({
+      url: "{{ route('item.delete.item') }}",
+      type: "POST",
+      data: { "id" : deleteItemModal.find("input[name='delete-item-id']").val() },
+      dataType: 'JSON',
+      success: function (result) {
+        Toast.fire({
+          icon: 'success',
+          title: result["message"]
+        });
+        deleteItemModal.modal("hide");
+        itemListTable.ajax.reload();
+      },
+      error: function(result) {
+        result = result["responseJSON"];
+        Toast.fire({
+          icon: 'error',
+          title: result["message"]
+        });
+      }
+    });
   });
 });
 </script>

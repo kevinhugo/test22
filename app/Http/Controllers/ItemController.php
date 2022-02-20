@@ -21,6 +21,11 @@ class ItemController extends Controller
     {
         return Item::getItemList($request);
     }
+    
+    public function getItemListApi(Request $request)
+    {
+        return response()->json(Item::getItemListApi($request));
+    }
 
     public function saveItem(Request $request)
     {
