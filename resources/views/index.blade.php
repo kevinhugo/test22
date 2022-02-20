@@ -26,6 +26,8 @@
   <!-- summernote -->
   <link rel="stylesheet" href="{{asset('plugins/summernote/summernote-bs4.min.css')}}">
   <link rel="stylesheet" href="{{asset('plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css')}}">
+
+  <link rel="stylesheet" href="{{asset('open-iconic-master/font/css/open-iconic-bootstrap.css')}}">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -180,7 +182,7 @@
                                 <div class="input-group" name="image-link-row">
                                   <input type="text" name="image[0]" class="form-control" placeholder="Image link" aria-label="Image link" aria-describedby="basic-addon2">
                                   <div class="input-group-append">
-                                    <button class="btn btn-outline-danger" name="delete-image-row" type="button"> - </button>
+                                    <button class="btn btn-outline-danger" name="delete-image-row" type="button"> <span class="oi oi-trash"></span> </button>
                                   </div>
                                 </div>
                               </div>
@@ -192,7 +194,7 @@
                                 <div class="input-group" name="color-row">
                                   <input type="text" name="color[0]" class="form-control" placeholder="Color" aria-label="Color" aria-describedby="basic-addon2">
                                   <div class="input-group-append">
-                                    <button class="btn btn-outline-danger" name="delete-color-row" type="button"> - </button>
+                                    <button class="btn btn-outline-danger" name="delete-color-row" type="button"> <span class="oi oi-trash"></span> </button>
                                   </div>
                                 </div>
                               </div>
@@ -208,7 +210,7 @@
                                   </div>
                                   <input type="number" name="size[0][price]" class="form-control" placeholder="Price" aria-label="Size" aria-describedby="basic-addon2">
                                   <div class="input-group-append">
-                                    <button class="btn btn-outline-danger" name="delete-size-row" type="button"> - </button>
+                                    <button class="btn btn-outline-danger" name="delete-size-row" type="button"> <span class="oi oi-trash"></span> </button>
                                   </div>
                                 </div>
                               </div>
@@ -374,7 +376,7 @@ $(document).ready(function() {
                 render: function(data, type, row) {
                     return `
                         <button type="button" item-id="${row.id}" class="btn btn-info" name="show-item-detail">
-                          Detail
+                          Edit
                         </button>
                         <button type="button" item-id="${row.id}" class="btn btn-danger" name="delete-item">
                           Delete
@@ -426,7 +428,7 @@ $(document).ready(function() {
         <div class="input-group" name="image-link-row">
           <input type="text" name="image[${imageLinkCount}]" class="form-control" placeholder="Image link" aria-label="Image link" aria-describedby="basic-addon2">
           <div class="input-group-append">
-            <button class="btn btn-outline-danger" name="delete-image-row" type="button"> - </button>
+            <button class="btn btn-outline-danger" name="delete-image-row" type="button"> <span class="oi oi-trash"></span> </button>
           </div>
         </div>
       `);
@@ -458,7 +460,7 @@ $(document).ready(function() {
         <div class="input-group" name="color-row">
           <input type="text" name="color[${colorCount}]" class="form-control" placeholder="Color" aria-label="Image link" aria-describedby="basic-addon2">
           <div class="input-group-append">
-            <button class="btn btn-outline-danger" name="delete-color-row" type="button"> - </button>
+            <button class="btn btn-outline-danger" name="delete-color-row" type="button"> <span class="oi oi-trash"></span> </button>
           </div>
         </div>
       `);
@@ -494,7 +496,7 @@ $(document).ready(function() {
         </div>
         <input type="number" name="size[${sizeCount}][price]" class="form-control" placeholder="Price" aria-label="Size" aria-describedby="basic-addon2">
         <div class="input-group-append">
-          <button class="btn btn-outline-danger" name="delete-size-row" type="button"> - </button>
+          <button class="btn btn-outline-danger" name="delete-size-row" type="button"> <span class="oi oi-trash"></span> </button>
         </div>
       </div>
     `);
@@ -554,10 +556,12 @@ $(document).ready(function() {
           data: { "id" : $(this).attr("item-id") },
           dataType: 'JSON',
           success: function (result) {
+            //Modal handling
             clearModal();
             imageLinkList.html("");
             colorList.html("");
             sizeList.html("");
+            //End of modal handling
 
             itemModal.modal("show");
             itemForm.find("input[name='id']").val(result["id"]);
@@ -583,11 +587,24 @@ $(document).ready(function() {
               latestRow.find("input[name*='[size]']").val(row["size"]);
               latestRow.find("input[name*='[price]']").val(row["price"]);
             });
+            
+            //Another Modal handling
+            if(imageLinkList.children().length == 0) {
+              addImageLinkRow();
+            }
+            if(colorList.children().length == 0) {
+              addColorRow();
+            }
+            if(sizeList.children().length == 0) {
+              addSizeRow();
+            }
+            //End of Another Modal handling
           },
       });
   });
 
   function clearModal() {
+    itemForm.find("input[name='id']").val("");
     itemForm.find("input[name='name']").val("");
     itemForm.find("textarea[name='description']").val("");
     imageLinkList.html("");
